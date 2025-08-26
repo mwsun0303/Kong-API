@@ -41,6 +41,10 @@ jobs:
   jar-build:
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    steps:
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
