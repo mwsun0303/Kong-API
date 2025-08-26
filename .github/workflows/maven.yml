@@ -16,7 +16,12 @@ jobs:
       uses: actions/setup-java@v4
       with:
         java-version: '17'
+        distribution: 'openjdk'
         cache: maven
+        java-package: jdk
+        check-latest: false
+        overwrite-settings: true
+        job-status: success
 
     - name: Cache Maven dependencies
       uses: actions/cache@v3
