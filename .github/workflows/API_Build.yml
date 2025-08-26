@@ -81,10 +81,14 @@ jobs:
         echo "ECR_REPO=sun-test" >> $GITHUB_ENV
         echo "AWS_ACCOUNT_ID=890742611047" >> $GITHUB_ENV
         echo "ECR_URL=dkr.ecr.ap-northeast-2.amazonaws.com"
-      
+        echo "AWS_REGION=ap-northeast-2"
+
+    - name: ECR Login
+      run: |
+        aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+
     - name: Docker Image Build and Push to ECR
       run: |
-        aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}  
         docker build -t ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }} .
         docker push ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }}
   
