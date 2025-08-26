@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    kong-db-1:
+      url: jdbc:postgresql://3.38.93.173:15432/postgres
+      username: postgres
+      password: postgres
+      driverClassName: org.postgresql.Driver
+    kong-db-2:
+      url: jdbc:postgresql://3.38.93.173:25432/postgres
+      username: postgres
+      password: postgres
+      driverClassName: org.postgresql.Driver
+    kong-db-3:
+      url: jdbc:postgresql://3.38.93.173:35432/postgres
+      username: postgres
+      password: postgres
+      driverClassName: org.postgresql.Driver
+
+  data:
+    redis:
+      host: 3.38.93.173
+      port: 16379
+      password: redis-init1!
+
+mybatis:
+  mapper-locations:
+    - classpath*:/mappers/*.xml
+#    - classpath:mappers/kong-db-2/*.xml
+#    - classpath:mappers/kong-db-3/*.xml
+  type-aliases-package: com.sun.kong.domain
