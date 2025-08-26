@@ -89,7 +89,7 @@ jobs:
 
     - name: Docker Image Build and Push to ECR
       run: |
-        docker build -t ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }} -f $GITHUB_WORKSPACE/Dockerfile $GITHUB_WORKSPACE/
-        docker push ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }}
+        docker build -t ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ steps.create-tag.outputs.tag_name }} -f $GITHUB_WORKSPACE/Dockerfile $GITHUB_WORKSPACE/
+        docker push ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ steps.create-tag.outputs.tag_name }}
   
 
