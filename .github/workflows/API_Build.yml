@@ -24,7 +24,7 @@ jobs:
       run: |
         REPO_NAME=$(basename $(pwd))
         USER_NAME="${{ github.actor }}"     # GitHub 액션을 트리거한 사용자
-        DATE=$(date +'%Y%m%d')
+        DATE=$(date +'%Y%m%d_%H%M')
         TAG_NAME="${REPO_NAME}-${USER_NAME}-${DATE}"
         echo "Generated Tag: $TAG_NAME"
         echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV  # 환경 변수로 설정
