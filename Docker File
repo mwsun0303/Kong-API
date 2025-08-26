@@ -1,0 +1,8 @@
+FROM openjdk:17-jdk-slim
+
+COPY target/*.jar /app/*.jar
+
+CMD ["java", "-jar", "/app/*.jar"]
+# CMD ["java", "-Dspring.profiles.active=prod", "-jar", "/app/*.jar"] # Profile이 있을 경우
+
+EXPOSE 8080
