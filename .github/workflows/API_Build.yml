@@ -90,7 +90,7 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
 
     - name: Check tag name
-      run: echo "Tag from create-tag: ${{ needs.create-tag.outputs.tag_name }}"
+      run: echo "Tag from create-tag / ${{ needs.create-tag.outputs.tag_name }}"
 
     - name: ECR Login
       id: login-ecr
