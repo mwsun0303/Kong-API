@@ -8,11 +8,11 @@ permissions:
   contents: write  # 'write' 권한 추가
 
 jobs:
-  env:
-    PROJECT: Kong
-    CODE_KOND: API    
   create-tag:
     runs-on: ubuntu-latest
+    env:
+      PROJECT: Kong
+      CODE_KOND: API
     steps:
     - name: Checkout repository For Create Tag
       uses: actions/checkout@v4
