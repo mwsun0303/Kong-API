@@ -1,5 +1,8 @@
 package com.sun.kong;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -34,8 +37,14 @@ public class Kong_Service {
         this.securityConfig = securityConfig;
         this.dataSourceConfig = dataSourceConfig;
     }
-	
-	// 1. DB Session Check
+    
+// 0. Health Check    
+    public String healthCheck() { // Health Check는 1번 DB 기준
+        List<Kong_DTO> resultList = kong_Mapper.healthCheck();
+        return (resultList != null && !resultList.isEmpty()) ? "Health Check 성공" : null;
+    }
+    
+// 1. DB Session Check
     SqlSessionTemplate getSqlSessionTemplateByDbName(String dbInfo) {
     	System.out.println("DB Session Check Service Start");
         switch (dbInfo) {
@@ -45,9 +54,6 @@ public class Kong_Service {
             default: throw new IllegalArgumentException("지원하지 않는 DB명: " + dbInfo);
         }
     }
-    // 2. DB Query
-    
-    
     
 // 2. Login
 	public String login(String corpCd, String memberId, String password) {
@@ -89,6 +95,8 @@ public class Kong_Service {
 		
 		return respone;
 	}
+
+
 	
 
 	

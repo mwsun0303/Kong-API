@@ -10,5 +10,9 @@
           AND memberId = #{memberId}
           AND password = #{password}
     </select>
+    
+     <select id="healthCheck" parameterType="map" resultType="com.sun.kong.Kong_DTO">
+        SELECT * FROM kong
+	 </select>
 
 </mapper>
