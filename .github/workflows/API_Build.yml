@@ -10,8 +10,6 @@ permissions:
 jobs:    
   create-tag:
     runs-on: ubuntu-latest
-    outputs:
-      tag_name: ${{ steps.generate_tag.outputs.tag_name }}  # output으로 tag_name 설정
     steps:
     - name: Checkout repository For Create Tag
       uses: actions/checkout@v4
@@ -40,6 +38,9 @@ jobs:
       run: |
         git tag ${{ env.TAG_NAME }}          # 환경 변수로 생성한 태그 사용
         git push origin ${{ env.TAG_NAME }}  # 푸시
+
+    outputs:
+      tag_name: ${{ steps.generate_tag.outputs.tag_name }}  # output으로 tag_name 설정
 
   jar-build:
     runs-on: ubuntu-latest
