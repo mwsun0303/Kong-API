@@ -47,6 +47,9 @@ jobs:
   jar-build:
     runs-on: ubuntu-latest
     needs: create-tag
+    env:
+      TAG_NAME: ${{ needs.create-tag.outputs.tag_name }}
+      S3_BUCKET: sun-ecs-s3
     steps:    
     - name: Checkout repository For Jar Build
       uses: actions/checkout@v4
@@ -62,8 +65,18 @@ jobs:
         overwrite-settings: true
         job-status: success
 
+    - name: Set up AWS credentials For Upload jar File To S3
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
     - name: Jar Build with Maven
       run: mvn clean package
+
+    - name: Upload JAR to S3
+      run: aws s3 cp target/*.jar s3://${{ env.S3_BUCKET }}/${{ env.TAG_NAME }}.jar
 
   docker-image-build:
     runs-on: ubuntu-latest
@@ -73,23 +86,30 @@ jobs:
     env:
       ECR_REPO: sun-test
       AWS_ACCOUNT_ID: 890742611047
-      AWS_REGION: ap-northeast-2 
+      AWS_REGION: ap-northeast-2
       ECR_URL: dkr.ecr.ap-northeast-2.amazonaws.com
       TAG_NAME: ${{ needs.create-tag.outputs.tag_name }}
+      DEPLOY_ARCHIVE_FILE: ROOT.jar
+      S3_BUCKET: sun-ecs-s3
+      DOCKER_FILE: DockerFile
 
     steps:
+    - name: Set up AWS credentials For Docker Build
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Download JAR from S3
+        run: aws s3 cp s3://${{ env.S3_BUCKET }}/${{ env.TAG_NAME }}.jar $GITHUB_WORKSPACE/$DEPLOY_ARCHIVE_FILE
+
     - name: Checkout repository For Docker Image Build
       uses: actions/checkout@v4    
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
 
-    - name: Set up AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
 
     - name: Check tag name
       run: echo "Tag from create-tag / ${{ needs.create-tag.outputs.tag_name }}"
@@ -100,7 +120,7 @@ jobs:
 
     - name: Docker Image Build and Push to ECR
       run: |
-        docker build -t ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }} -f $GITHUB_WORKSPACE/DockerFile $GITHUB_WORKSPACE/
+        docker build -t ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }} -f $GITHUB_WORKSPACE/$DOCKER_FILE $GITHUB_WORKSPACE/
         docker push ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }}
   
 
