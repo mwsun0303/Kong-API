@@ -25,12 +25,12 @@ jobs:
     - name: Generate Tag
       id: generate_tag
       run: |
-        USER_NAME="${{ github.actor }}"     # GitHub 액션을 트리거한 사용자
+        USER_NAME="${{ github.actor }}"              # GitHub Push User (Action Trigger User)
         DATE=$(date +'%Y%m%d_%H%M')
         TAG_NAME="${PROJECT}-${CODE_KIND}-${USER_NAME}-${DATE}"
-        echo "Generated Tag: $TAG_NAME"
-        echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV     # 환경 변수로 설정
-        echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT  # Output 설정
+        echo "Generated Tag: $TAG_NAME"              # Tag Check
+        echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV     # Git TAG Push 용도 환경 변수 설정
+        echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT  # Build Image Tag 용도 Output 설정
 
     - name: Authenticate with GIT_TOKEN
       run: |
@@ -38,8 +38,8 @@ jobs:
         
     - name: Create and push tag
       run: |
-        git tag ${{ env.TAG_NAME }}               # 환경 변수로 생성한 태그 사용
-        git push origin ${{ env.TAG_NAME }}       # 푸시
+        git tag ${{ env.TAG_NAME }}                   # Tag
+        git push origin ${{ env.TAG_NAME }}           # Push
         
     outputs:
       tag_name: ${{ steps.generate_tag.outputs.tag_name }}
