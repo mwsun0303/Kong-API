@@ -30,7 +30,7 @@ jobs:
         TAG_NAME="${PROJECT}-${CODE_KIND}-${USER_NAME}-${DATE}"
         echo "Generated Tag: $TAG_NAME"
         echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV  # 환경 변수로 설정
-#        echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT  # Output 설정
+        echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT  # Output 설정
 
     - name: Authenticate with GIT_TOKEN
       run: |
@@ -38,11 +38,11 @@ jobs:
         
     - name: Create and push tag
       run: |
-        git tag ${{ env.TAG_NAME }}          # 환경 변수로 생성한 태그 사용
+        git tag ${{ env.TAG_NAME }}               # 환경 변수로 생성한 태그 사용
         git push origin ${{ env.TAG_NAME }}       # 푸시
         
     outputs:
-      tag_name: ${{ env.TAG_NAME }}  # output으로 tag_name 설정
+      tag_name: ${{ steps.generate_tag.outputs.tag_name }}
 
   jar-build:
     runs-on: ubuntu-latest
@@ -88,6 +88,9 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
         aws-region: ${{ env.AWS_REGION }}
+
+    - name: Check tag name
+      run: echo "Tag from create-tag: ${{ needs.create-tag.outputs.tag_name }}"
 
     - name: ECR Login
       id: login-ecr
