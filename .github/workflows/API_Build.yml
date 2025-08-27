@@ -42,7 +42,7 @@ jobs:
         git push origin ${{ env.TAG_NAME }}       # 푸시
         
     outputs:
-      tag_name: ${{ steps.generate_tag.outputs.tag_name }}  # output으로 tag_name 설정
+      tag_name: ${{ steps.generate_tag.tag_name }}  # output으로 tag_name 설정
 
   jar-build:
     runs-on: ubuntu-latest
