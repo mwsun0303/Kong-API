@@ -7,7 +7,10 @@ on:
 permissions:
   contents: write  # 'write' 권한 추가
 
-jobs:    
+jobs:
+  env:
+    PROJECT: Kong
+    CODE_KOND: API    
   create-tag:
     runs-on: ubuntu-latest
     steps:
@@ -22,10 +25,9 @@ jobs:
     - name: Generate Tag
       id: generate_tag
       run: |
-        REPO_NAME=$(basename $(pwd))
         USER_NAME="${{ github.actor }}"     # GitHub 액션을 트리거한 사용자
         DATE=$(date +'%Y%m%d_%H%M')
-        TAG_NAME="${REPO_NAME}-${USER_NAME}-${DATE}"
+        TAG_NAME="${PROJECT}-${CODE_KIND}}-${USER_NAME}-${DATE}"
         echo "Generated Tag: $TAG_NAME"
         echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV  # 환경 변수로 설정
         echo "::set-output name=tag_name::${{ env.TAG_NAME }} "  # output으로 설정
@@ -65,7 +67,14 @@ jobs:
 
   docker-image-build:
     runs-on: ubuntu-latest
-    needs: jar-build
+    needs: jar-build  
+    env:
+      ECR_REPO: sun-test
+      AWS_ACCOUNT_ID: 890742611047
+      AWS_REGION: ap-northeast-2 
+      ECR_URL: dkr.ecr.ap-northeast-2.amazonaws.com
+      TAG_NAME: ${{ needs.create-tag.outputs.tag_name }}
+
     steps:
     - name: Checkout repository For Docker Image Build
       uses: actions/checkout@v4    
@@ -78,14 +87,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-        aws-region: ap-northeast-2
-
-    - name: Set Environment Variables
-      run: |
-        echo "ECR_REPO=sun-test" >> $GITHUB_ENV
-        echo "AWS_ACCOUNT_ID=890742611047" >> $GITHUB_ENV
-        echo "ECR_URL=dkr.ecr.ap-northeast-2.amazonaws.com" >> $GITHUB_ENV
-        echo "TAG_NAME=${{ needs.create-tag.outputs.tag_name }}" >> $GITHUB_ENV  # needs로 tag_name을 가져옴
+        aws-region: ${{ env.AWS_REGION }}
 
     - name: ECR Login
       id: login-ecr
