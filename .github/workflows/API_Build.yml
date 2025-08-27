@@ -30,7 +30,7 @@ jobs:
         TAG_NAME="${PROJECT}-${CODE_KIND}-${USER_NAME}-${DATE}"
         echo "Generated Tag: $TAG_NAME"
         echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV  # 환경 변수로 설정
-        echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT  # Output 설정
+#        echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT  # Output 설정
 
     - name: Authenticate with GIT_TOKEN
       run: |
@@ -42,7 +42,7 @@ jobs:
         git push origin ${{ env.TAG_NAME }}       # 푸시
         
     outputs:
-      tag_name: ${{ steps.generate_tag.tag_name }}  # output으로 tag_name 설정
+      tag_name: ${{ env.TAG_NAME }}  # output으로 tag_name 설정
 
   jar-build:
     runs-on: ubuntu-latest
