@@ -49,6 +49,7 @@ jobs:
     needs: create-tag
     env:
       TAG_NAME: ${{ needs.create-tag.outputs.tag_name }}
+      AWS_REGION: ap-northeast-2
       S3_BUCKET: sun-ecs-s3
     steps:    
     - name: Checkout repository For Jar Build
