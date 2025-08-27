@@ -102,7 +102,7 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
 
     - name: Download JAR from S3
-        run: aws s3 cp s3://${{ env.S3_BUCKET }}/${{ env.TAG_NAME }}.jar $GITHUB_WORKSPACE/$DEPLOY_ARCHIVE_FILE
+      run: aws s3 cp s3://${{ env.S3_BUCKET }}/${{ env.TAG_NAME }}.jar $GITHUB_WORKSPACE/$DEPLOY_ARCHIVE_FILE
 
     - name: Checkout repository For Docker Image Build
       uses: actions/checkout@v4    
