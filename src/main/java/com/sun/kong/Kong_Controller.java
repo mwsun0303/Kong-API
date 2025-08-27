@@ -17,9 +17,9 @@ public class Kong_Controller {
 	Kong_Controller(SecurityConfig security_Config) {
         this.security_Config = security_Config;
     }
-// index
-    @GetMapping("/")
-    public void redirectToIndex(HttpServletResponse response) throws IOException {
-        response.sendRedirect("/index.html");
-    }
+//// index
+//    @GetMapping("/")
+//    public void redirectToIndex(HttpServletResponse response) throws IOException {
+//        response.sendRedirect("/index.html");
+//    }
 }
