@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PROJECT: Kong
-      CODE_KOND: API
+      CODE_KIND: API
     steps:
     - name: Checkout repository For Create Tag
       uses: actions/checkout@v4
@@ -27,10 +27,10 @@ jobs:
       run: |
         USER_NAME="${{ github.actor }}"     # GitHub 액션을 트리거한 사용자
         DATE=$(date +'%Y%m%d_%H%M')
-        TAG_NAME="${PROJECT}-${CODE_KIND}}-${USER_NAME}-${DATE}"
+        TAG_NAME="${PROJECT}-${CODE_KIND}-${USER_NAME}-${DATE}"
         echo "Generated Tag: $TAG_NAME"
         echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV  # 환경 변수로 설정
-        echo "::set-output name=tag_name::${{ env.TAG_NAME }} "  # output으로 설정
+        echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT  # Output 설정
 
     - name: Authenticate with GIT_TOKEN
       run: |
@@ -39,8 +39,8 @@ jobs:
     - name: Create and push tag
       run: |
         git tag ${{ env.TAG_NAME }}          # 환경 변수로 생성한 태그 사용
-        git push origin ${{ env.TAG_NAME }}  # 푸시
-
+        git push origin ${{ env.TAG_NAME }}       # 푸시
+        
     outputs:
       tag_name: ${{ steps.generate_tag.outputs.tag_name }}  # output으로 tag_name 설정
 
