@@ -28,7 +28,7 @@ jobs:
         TAG_NAME="${REPO_NAME}-${USER_NAME}-${DATE}"
         echo "Generated Tag: $TAG_NAME"
         echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV  # 환경 변수로 설정
-        echo "::set-output name=tag_name::$TAG_NAME"  # output으로 설정
+        echo "::set-output name=tag_name::${{ env.TAG_NAME }} "  # output으로 설정
 
     - name: Authenticate with GIT_TOKEN
       run: |
