@@ -174,8 +174,8 @@ jobs:
       run: |
         aws s3 cp ${{ env.ECS_BUILD_ARTIFACT_FILE }} s3://${{ env.S3_BUCKET_NAME }}/${{ env.CLASS }}/${{ env.PROJECT }}/${{ env.CODE_KIND}}/${{ env.S3_BUILD_ARTIFACT_PATH }}/
 
-    - name: Install jq
-      run: sudo apt-get install jq
+    - name: Check AWS CLI version
+      run: aws --version
 
     - name: Update ECS Service
       run: |
@@ -189,8 +189,7 @@ jobs:
         NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg image_uri "$IMAGE_URI" '
           .taskDefinition | 
           del(.taskDefinitionArn, .revision, .status, .registeredAt, .registeredBy, .requiresAttributes, .compatibilities) |
-          .containerDefinitions[0].image = $image_uri
-        ')
+          .containerDefinitions[0].image = $image_uri')
 
         # 새 태스크 정의 등록
         NEW_TASK_DEFINITION_REVISION=$(aws ecs register-task-definition --cli-input-json "$NEW_TASK_DEFINITION")
