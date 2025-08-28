@@ -204,10 +204,10 @@ jobs:
         echo "$NEW_TASK_DEFINITION" > "$NEW_TASK_DEFINITION_FILE"
         
         # 새로운 태스크 정의 등록
-        aws ecs register-task-definition $NEW_TASK_DEFINITION_FILE
+        aws ecs register-task-definition --cli-input-json file://$NEW_TASK_DEFINITION_FILE
         
-        # # 서비스 업데이트
-        # aws ecs update-service \
-        #   --cluster ${{ env.ECS_CLUSTER_NAME }} \
-        #   --service ${{ env.ECS_SERVICE_NAME }} \
-        #   --task-definition $NEW_TASK_DEFINITION_REVISION
+        # 서비스 업데이트
+        aws ecs update-service \
+          --cluster ${{ env.ECS_CLUSTER_NAME }} \
+          --service ${{ env.ECS_SERVICE_NAME }} \
+          --task-definition $NEW_TASK_DEFINITION_REVISION
