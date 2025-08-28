@@ -207,7 +207,7 @@ jobs:
           --query 'taskDefinition' \
           --output json)                                                                               # Json 형태
 
-        STRIPPED_TASK_DEFINITION=$(echo "$TASK_DEFINITION" | jq '                                      # Image URI 적용을 위한 불필요 필드 제거
+        STRIPPED_TASK_DEFINITION=$(echo "$TASK_DEFINITION" | jq '                                      # Image URI 적용을 위한 불필요 필드 제거 (자동 생성, 수정 불가) 
           del(
             .taskDefinitionArn,
             .revision,
@@ -219,8 +219,8 @@ jobs:
           )
         ')
 
-        NEW_TASK_DEFINITION=$(echo "$STRIPPED_TASK_DEFINITION" | jq \                                   # New Image URI 반영, 신규 Task 정의
-          --arg image_uri "${{ env.IMAGE_URI }}" \
+        NEW_TASK_DEFINITION=$(echo "$STRIPPED_TASK_DEFINITION" | jq \
+          --arg image_uri "${IMAGE_URI}" \
           '.containerDefinitions[0].image = $image_uri')
 
         echo "$NEW_TASK_DEFINITION" > "${{ env.NEW_TASK_DEFINITION_FILE }}"                             # 신규 Task Json 형태로 저장
