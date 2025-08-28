@@ -179,17 +179,14 @@ jobs:
 
     - name: Update ECS Service
       run: |
-        # 기존 태스크 정의 가져오기
-        # TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }})
         TASK_DEFINITION=$(aws ecs describe-task-definition \
           --task-definition ${{ env.ECS_TASK_DEFINITION }} \
           --query 'taskDefinition' \
           --output json)
 
-        # 환경 변수 설정
         IMAGE_URI="${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }}"
         NEW_TASK_DEFINITION_FILE=new_task.json
-        # 불필요한 필드 제거
+
         STRIPPED_TASK_DEFINITION=$(echo "$TASK_DEFINITION" | jq '
           del(
             .taskDefinitionArn,
@@ -201,17 +198,17 @@ jobs:
             .compatibilities
           )
         ')
-        # 이미지 태그 변경
-        NEW_TASK_DEFINITION=$(echo "$STRIPPED_TASK_DEFINITION" | jq --arg image_uri "$IMAGE_URI" '.containerDefinitions[0].image = $IMAGE_URI')
-        
-        # Json 파일로 변환
+
+        NEW_TASK_DEFINITION=$(echo "$STRIPPED_TASK_DEFINITION" | jq --arg image_uri "$IMAGE_URI" '.containerDefinitions[0].image = $image_uri')
+
         echo "$NEW_TASK_DEFINITION" > "$NEW_TASK_DEFINITION_FILE"
-        
-        # 새로운 태스크 정의 등록
-        aws ecs register-task-definition --cli-input-json file://$NEW_TASK_DEFINITION_FILE
-        
-        # 서비스 업데이트
+
+        REGISTERED_TASK_DEF=$(aws ecs register-task-definition --cli-input-json file://$NEW_TASK_DEFINITION_FILE)
+
+        NEW_TASK_DEFINITION_ARN=$(echo "$REGISTERED_TASK_DEF" | jq -r '.taskDefinition.taskDefinitionArn')
+
         aws ecs update-service \
           --cluster ${{ env.ECS_CLUSTER_NAME }} \
           --service ${{ env.ECS_SERVICE_NAME }} \
-          --task-definition $NEW_TASK_DEFINITION_REVISION
+          --task-definition "$NEW_TASK_DEFINITION_ARN"
+
