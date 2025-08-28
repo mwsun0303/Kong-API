@@ -180,7 +180,11 @@ jobs:
     - name: Update ECS Service
       run: |
         # 기존 태스크 정의 가져오기
-        TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }})
+        # TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }})
+        TASK_DEFINITION=$(aws ecs describe-task-definition \
+          --task-definition ${{ env.ECS_TASK_DEFINITION }} \
+          --query 'taskDefinition' \
+          --output json)
 
         # 환경 변수 설정
         IMAGE_URI="${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }}"
