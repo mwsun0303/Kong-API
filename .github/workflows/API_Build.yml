@@ -21,7 +21,7 @@ jobs:
       S3_BUCKET_NAME: sun-ecs-s3
       S3_BUILD_ARCHIVE_PATH: build
       S3_BUILD_ARTIFACT_PATH: artifact
-      ECR_REPO: sun-ecr
+      ECR_REPO: sun-test
       ECR_URL: dkr.ecr.ap-northeast-2.amazonaws.com
       DOCKER_FILE: DockerFile
     steps:
@@ -42,19 +42,6 @@ jobs:
         echo "Generated Tag: $TAG_NAME"                                           # Tag Check
         echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV                                  # Git TAG Push 용도 환경 변수 설정
         echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT                               # Build Image Tag 용도 Output 설정
-        echo "project=$PROJECT" >> $GITHUB_OUTPUT                                 # Project 구분
-        echo "class=$CLASS" >> $GITHUB_OUTPUT                                     # 환경 구분
-        echo "deploy_archive_file=$DEPLOY_ARCHIVE_FILE" >> $GITHUB_OUTPUT         # 배포 파일명
-        echo "code_kind=$CODE_KIND" >> $GITHUB_OUTPUT                             # Code 구분
-        echo "ecs_build_artifact_file=$ECS_BUILD_ARTIFACT_FILE" >> $GITHUB_OUTPUT # ECS Deploy artifact
-        echo "aws_account_id=$AWS_ACCOUNT_ID" >> $GITHUB_OUTPUT                   # AWS ACCOUNT
-        echo "aws_region=$AWS_REGION" >> $GITHUB_OUTPUT                           # AWS Region
-        echo "s3_bucket_name=$S3_BUCKET_NAME" >> $GITHUB_OUTPUT                   # S3 Bucket
-        echo "s3_build_archive_path=$S3_BUILD_ARCHIVE_PATH" >> $GITHUB_OUTPUT     # Build File Path
-        echo "s3_build_artifact_path=$S3_BUILD_ARTIFACT_PATH" >> $GITHUB_OUTPUT   # Build Artifact Path
-        echo "ecr_repo=$ECR_REPO" >> $GITHUB_OUTPUT                               # ecr
-        echo "ecr_url=$ECR_URL" >> $GITHUB_OUTPUT                                 # ecr url
-        echo "docker_file=$DOCKER_FILE" >> $GITHUB_OUTPUT                         # Docker 파일
 
     - name: Authenticate with GIT_TOKEN
       run: |
