@@ -197,14 +197,14 @@ jobs:
             .compatibilities
           )
         ')
-        # 이미지 변경
-        NEW_TASK_DEFINITION=$(echo "$STRIPPED_TASK_DEFINITION" | jq --arg image_uri "$image_uri" '.containerDefinitions[0].image = $image_uri')
+        # # 이미지 변경
+        # NEW_TASK_DEFINITION=$(echo "$STRIPPED_TASK_DEFINITION" | jq --arg image_uri "$image_uri" '.containerDefinitions[0].image = $image_uri')
 
-        # 새로운 태스크 정의 등록
-        NEW_TASK_DEFINITION_REVISION=$(aws ecs register-task-definition $NEW_TASK_DEFINITION)
+        # # 새로운 태스크 정의 등록
+        # NEW_TASK_DEFINITION_REVISION=$(aws ecs register-task-definition $NEW_TASK_DEFINITION)
 
-        # 서비스 업데이트
-        aws ecs update-service \
-          --cluster ${{ env.ECS_CLUSTER_NAME }} \
-          --service ${{ env.ECS_SERVICE_NAME }} \
-          --task-definition $NEW_TASK_DEFINITION_REVISION
+        # # 서비스 업데이트
+        # aws ecs update-service \
+        #   --cluster ${{ env.ECS_CLUSTER_NAME }} \
+        #   --service ${{ env.ECS_SERVICE_NAME }} \
+        #   --task-definition $NEW_TASK_DEFINITION_REVISION
