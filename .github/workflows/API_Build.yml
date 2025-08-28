@@ -24,7 +24,7 @@ jobs:
       ECR_REPO: sun-test
       ECR_URL: dkr.ecr.ap-northeast-2.amazonaws.com
       ECS_CLUSTER_NAME: sun-ecs
-      ECS_SERVICE_NAME: sun-ecs-service
+      ECS_SERVICE_NAME: sun-ecs-service-temp
       ECS_TASK_DEFINITION: sun-ecs-task
       DOCKER_FILE: DockerFile
     steps:
