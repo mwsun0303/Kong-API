@@ -202,7 +202,7 @@ jobs:
           )
         ')
         # 이미지 태그 변경
-        NEW_TASK_DEFINITION=$(echo "$STRIPPED_TASK_DEFINITION" | jq --arg image_uri "$image_uri" '.containerDefinitions[0].image = $image_uri')
+        NEW_TASK_DEFINITION=$(echo "$STRIPPED_TASK_DEFINITION" | jq --arg image_uri "$IMAGE_URI" '.containerDefinitions[0].image = $IMAGE_URI')
         
         # Json 파일로 변환
         echo "$NEW_TASK_DEFINITION" > "$NEW_TASK_DEFINITION_FILE"
