@@ -191,7 +191,7 @@ jobs:
       ECS_TASK_DEFINITION: ${{ needs.create-tag.outputs.ecs_task_definition }} 
       NEW_TASK_DEFINITION_FILE: new_task.json                                                         # Image 변경 후 적용시킬 Task 정의 파일
 
-    step:
+    steps:
     - name: Set up AWS credentials For ECS Deploy
       uses: aws-actions/configure-aws-credentials@v1
       with:
