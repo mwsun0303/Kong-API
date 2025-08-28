@@ -66,7 +66,20 @@ jobs:
         git push origin ${{ env.TAG_NAME }}           # Push
         
     outputs:
-      tag_name: ${{ steps.generate_tag.outputs.tag_name }} 
+      tag_name: ${{ steps.generate_tag.outputs.tag_name }}  # Generate Tag Output
+      class: ${{ env.CLASS }}
+      project: ${{ env.PROJECT }}
+      code_kind: ${{ env.CODE_KIND }}
+      deploy_archive_file: ${{ env.DEPLOY_ARCHIVE_FILE }}
+      ecs_build_artifact_file: ${{ env.ECS_BUILD_ARTIFACT_FILE }}
+      aws_account_id: ${{ env.AWS_ACCOUNT_ID }}
+      aws_region: ${{ env.AWS_REGION }}
+      s3_bucket_name: ${{ env.S3_BUCKET_NAME }}
+      s3_build_archive_path: ${{ env.S3_BUILD_ARCHIVE_PATH }}
+      s3_build_artifact_path: ${{ env.S3_BUILD_ARTIFACT_PATH }}
+      ecr_repo: ${{ env.ECR_REPO }}
+      ecr_url: ${{ env.ECR_URL }}
+      docker_file: ${{ env.DOCKER_FILE }}
 
   jar-build:
     runs-on: ubuntu-latest
@@ -76,9 +89,7 @@ jobs:
       CLASS: ${{ needs.create-tag.outputs.class }}
       PROJECT: ${{ needs.create-tag.outputs.project }}
       CODE_KIND: ${{ needs.create-tag.outputs.code_kind }}
-
       AWS_REGION: ${{ needs.create-tag.outputs.aws_region }}
-
       S3_BUCKET_NAME: ${{ needs.create-tag.outputs.s3_bucket_name }}
       S3_BUILD_ARCHIVE_PATH: ${{ needs.create-tag.outputs.s3_build_archive_path }}
     steps:    
