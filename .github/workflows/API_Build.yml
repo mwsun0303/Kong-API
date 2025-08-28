@@ -174,7 +174,7 @@ jobs:
     #   run: |
     #     aws s3 cp ${{ env.ECS_BUILD_ARTIFACT_FILE }} s3://${{ env.S3_BUCKET_NAME }}/${{ env.CLASS }}/${{ env.PROJECT }}/${{ env.CODE_KIND}}/${{ env.S3_BUILD_ARTIFACT_PATH }}/
 
-  ECS Deploy:
+  ecs-deploy:
     runs-on: ubuntu-latest
     needs:        
       - create-tag  
