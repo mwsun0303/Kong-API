@@ -225,13 +225,13 @@ jobs:
 
         echo "$NEW_TASK_DEFINITION" > "${{ env.NEW_TASK_DEFINITION_FILE }}"                             # 신규 Task Json 형태로 저장
 
-        REGISTERED_TASK_DEF=$(aws ecs register-task-definition \                                        # 신규 Task 등록
+        REGISTERED_TASK_DEF=$(aws ecs register-task-definition \
           --cli-input-json file://${{ env.NEW_TASK_DEFINITION_FILE }})
 
-        NEW_TASK_DEFINITION_ARN=$(echo "$REGISTERED_TASK_DEF" | jq -r \                                 # 신규 Task 정의 ARN 조회
+        NEW_TASK_DEFINITION_ARN=$(echo "$REGISTERED_TASK_DEF" | jq -r \
           '.taskDefinition.taskDefinitionArn')
 
-        aws ecs update-service \                                                                        # ECS Service Deploy
+        aws ecs update-service \
           --cluster ${{ env.ECS_CLUSTER_NAME }} \
           --service ${{ env.ECS_SERVICE_NAME }} \
           --task-definition "$NEW_TASK_DEFINITION_ARN"
