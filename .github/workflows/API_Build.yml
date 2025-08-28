@@ -201,7 +201,8 @@ jobs:
         NEW_TASK_DEFINITION=$(echo "$STRIPPED_TASK_DEFINITION" | jq --arg image_uri "$image_uri" '.containerDefinitions[0].image = $image_uri')
 
         # 새로운 태스크 정의 등록
-        NEW_TASK_DEFINITION_REVISION=$(aws ecs register-task-definition $NEW_TASK_DEFINITION)
+        # NEW_TASK_DEFINITION=$(aws ecs register-task-definition $NEW_TASK_DEFINITION)
+        echo "$NEW_TASK_DEFINITION" | aws ecs register-task-definition --cli-input-json file:///dev/stdin
 
         # # 서비스 업데이트
         # aws ecs update-service \
