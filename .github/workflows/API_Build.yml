@@ -188,9 +188,9 @@ jobs:
       ECR_URL: ${{ needs.create-tag.outputs.ecr_url }}
       ECS_CLUSTER_NAME: ${{ needs.create-tag.outputs.ecs_cluster_name }}
       ECS_SERVICE_NAME: ${{ needs.create-tag.outputs.ecs_service_name }}
-      ECS_TASK_DEFINITION: ${{ needs.create-tag.outputs.ecs_task_definition }}
-      IMAGE_URI: ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }} # 배포된 Docker Image Version
+      ECS_TASK_DEFINITION: ${{ needs.create-tag.outputs.ecs_task_definition }} 
       NEW_TASK_DEFINITION_FILE: new_task.json                                                         # Image 변경 후 적용시킬 Task 정의 파일
+
     step:
     - name: Set up AWS credentials For ECS Deploy
       uses: aws-actions/configure-aws-credentials@v1
@@ -200,13 +200,14 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
 
     - name: Update ECS Service
-      run: |                                                    
-        TASK_DEFINITION=$(aws ecs describe-task-definition \                # 현재 Task 정의값 조회                   
+      run: |
+        IMAGE_URI=${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }} # 배포된 Docker Image Version                                                    
+        TASK_DEFINITION=$(aws ecs describe-task-definition \                                           # 현재 Task 정의값 조회                   
           --task-definition ${{ env.ECS_TASK_DEFINITION }} \
           --query 'taskDefinition' \
-          --output json)                                                    # Json 형태
+          --output json)                                                                               # Json 형태
 
-        STRIPPED_TASK_DEFINITION=$(echo "$TASK_DEFINITION" | jq '           # Image URI 적용을 위한 불필요 필드 제거
+        STRIPPED_TASK_DEFINITION=$(echo "$TASK_DEFINITION" | jq '                                      # Image URI 적용을 위한 불필요 필드 제거
           del(
             .taskDefinitionArn,
             .revision,
@@ -218,19 +219,19 @@ jobs:
           )
         ')
 
-        NEW_TASK_DEFINITION=$(echo "$STRIPPED_TASK_DEFINITION" | jq \        # New Image URI 반영, 신규 Task 정의
+        NEW_TASK_DEFINITION=$(echo "$STRIPPED_TASK_DEFINITION" | jq \                                   # New Image URI 반영, 신규 Task 정의
           --arg image_uri "${{ env.IMAGE_URI }}" \
           '.containerDefinitions[0].image = $image_uri')
 
-        echo "$NEW_TASK_DEFINITION" > "${{ env.NEW_TASK_DEFINITION_FILE }}"  # 신규 Task Json 형태로 저장
+        echo "$NEW_TASK_DEFINITION" > "${{ env.NEW_TASK_DEFINITION_FILE }}"                             # 신규 Task Json 형태로 저장
 
-        REGISTERED_TASK_DEF=$(aws ecs register-task-definition \             # 신규 Task 등록
+        REGISTERED_TASK_DEF=$(aws ecs register-task-definition \                                        # 신규 Task 등록
           --cli-input-json file://${{ env.NEW_TASK_DEFINITION_FILE }})
 
-        NEW_TASK_DEFINITION_ARN=$(echo "$REGISTERED_TASK_DEF" | jq -r \      # 신규 Task 정의 ARN 조회
+        NEW_TASK_DEFINITION_ARN=$(echo "$REGISTERED_TASK_DEF" | jq -r \                                 # 신규 Task 정의 ARN 조회
           '.taskDefinition.taskDefinitionArn')
 
-        aws ecs update-service \                                             # ECS Service Deploy
+        aws ecs update-service \                                                                        # ECS Service Deploy
           --cluster ${{ env.ECS_CLUSTER_NAME }} \
           --service ${{ env.ECS_SERVICE_NAME }} \
           --task-definition "$NEW_TASK_DEFINITION_ARN"
