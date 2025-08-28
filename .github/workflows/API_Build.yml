@@ -12,7 +12,18 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PROJECT: Kong
+      CLASS: prod
       CODE_KIND: API
+      DEPLOY_ARCHIVE_FILE: ROOT.jar
+      ECS_BUILD_ARTIFACT_FILE: imagedefinitions.json
+      AWS_ACCOUNT_ID: 890742611047
+      AWS_REGION: ap-northeast-2
+      S3_BUCKET_NAME: sun-ecs-s3
+      S3_BUILD_ARCHIVE_PATH: build
+      S3_BUILD_ARTIFACT_PATH: artifact
+      ECR_REPO: sun-ecr
+      ECR_URL: dkr.ecr.ap-northeast-2.amazonaws.com
+      DOCKER_FILE: DockerFile
     steps:
     - name: Checkout repository For Create Tag
       uses: actions/checkout@v4
@@ -22,15 +33,28 @@ jobs:
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
 
-    - name: Generate Tag
+    - name: Generate Tag, Env OutPut Config
       id: generate_tag
       run: |
-        USER_NAME="${{ github.actor }}"              # GitHub Push User (Action Trigger User)
+        USER_NAME="${{ github.actor }}"                                           # GitHub Push User (Action Trigger User)
         DATE=$(date +'%Y%m%d_%H%M')
         TAG_NAME="${PROJECT}-${CODE_KIND}-${USER_NAME}-${DATE}"
-        echo "Generated Tag: $TAG_NAME"              # Tag Check
-        echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV     # Git TAG Push 용도 환경 변수 설정
-        echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT  # Build Image Tag 용도 Output 설정
+        echo "Generated Tag: $TAG_NAME"                                           # Tag Check
+        echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV                                  # Git TAG Push 용도 환경 변수 설정
+        echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT                               # Build Image Tag 용도 Output 설정
+        echo "project=$PROJECT" >> $GITHUB_OUTPUT                                 # Project 구분
+        echo "class=$CLASS" >> $GITHUB_OUTPUT                                     # 환경 구분
+        echo "deploy_archive_file=$DEPLOY_ARCHIVE_FILE" >> $GITHUB_OUTPUT         # 배포 파일명
+        echo "code_kind=$CODE_KIND" >> $GITHUB_OUTPUT                             # Code 구분
+        echo "ecs_build_artifact_file=$ECS_BUILD_ARTIFACT_FILE" >> $GITHUB_OUTPUT # ECS Deploy artifact
+        echo "aws_account_id=$AWS_ACCOUNT_ID" >> $GITHUB_OUTPUT                   # AWS ACCOUNT
+        echo "aws_region=$AWS_REGION" >> $GITHUB_OUTPUT                           # AWS Region
+        echo "s3_bucket_name=$S3_BUCKET_NAME" >> $GITHUB_OUTPUT                   # S3 Bucket
+        echo "s3_build_archive_path=$S3_BUILD_ARCHIVE_PATH" >> $GITHUB_OUTPUT     # Build File Path
+        echo "s3_build_artifact_path=$S3_BUILD_ARTIFACT_PATH" >> $GITHUB_OUTPUT   # Build Artifact Path
+        echo "ecr_repo=$ECR_REPO" >> $GITHUB_OUTPUT                               # ecr
+        echo "ecr_url=$ECR_URL" >> $GITHUB_OUTPUT                                 # ecr url
+        echo "docker_file=$DOCKER_FILE" >> $GITHUB_OUTPUT                         # Docker 파일
 
     - name: Authenticate with GIT_TOKEN
       run: |
@@ -49,8 +73,14 @@ jobs:
     needs: create-tag
     env:
       TAG_NAME: ${{ needs.create-tag.outputs.tag_name }}
-      AWS_REGION: ap-northeast-2
-      S3_BUCKET: sun-ecs-s3
+      CLASS: ${{ needs.create-tag.outputs.class }}
+      PROJECT: ${{ needs.create-tag.outputs.project }}
+      CODE_KIND: ${{ needs.create-tag.outputs.code_kind }}
+
+      AWS_REGION: ${{ needs.create-tag.outputs.aws_region }}
+
+      S3_BUCKET_NAME: ${{ needs.create-tag.outputs.s3_bucket_name }}
+      S3_BUILD_ARCHIVE_PATH: ${{ needs.create-tag.outputs.s3_build_archive_path }}
     steps:    
     - name: Checkout repository For Jar Build
       uses: actions/checkout@v4
@@ -74,10 +104,11 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
 
     - name: Jar Build with Maven
-      run: mvn clean package
+      run: | 
+        mvn clean package
 
     - name: Upload JAR to S3
-      run: aws s3 cp target/*.jar s3://${{ env.S3_BUCKET }}/${{ env.TAG_NAME }}.jar
+      run: aws s3 cp target/*.jar s3://${{ env.S3_BUCKET_NAME }}/${{ env.CLASS }}/${{ env.PROJECT }}/${{ env.CODE_KIND}}/${{ env.S3_BUILD_ARCHIVE_PATH }}/${{ env.TAG_NAME }}.jar
 
   docker-image-build:
     runs-on: ubuntu-latest
@@ -85,14 +116,21 @@ jobs:
       - create-tag  
       - jar-build
     env:
-      ECR_REPO: sun-test
-      AWS_ACCOUNT_ID: 890742611047
-      AWS_REGION: ap-northeast-2
-      ECR_URL: dkr.ecr.ap-northeast-2.amazonaws.com
       TAG_NAME: ${{ needs.create-tag.outputs.tag_name }}
-      DEPLOY_ARCHIVE_FILE: ROOT.jar
-      S3_BUCKET: sun-ecs-s3
-      DOCKER_FILE: DockerFile
+      CLASS: ${{ needs.create-tag.outputs.class }}
+      PROJECT: ${{ needs.create-tag.outputs.project }}
+      CODE_KIND: ${{ needs.create-tag.outputs.code_kind }}
+      DEPLOY_ARCHIVE_FILE: ${{ needs.create-tag.outputs.deploy_archive_file }}
+      ECS_BUILD_ARTIFACT_FILE: ${{ needs.create-tag.outputs.ecs_build_artifact_file }}
+      AWS_ACCOUNT_ID: ${{ needs.create-tag.outputs.aws_account_id }}
+      AWS_REGION: ${{ needs.create-tag.outputs.aws_region }}
+      S3_BUCKET_NAME: ${{ needs.create-tag.outputs.s3_bucket_name }}
+      S3_BUILD_ARCHIVE_PATH: ${{ needs.create-tag.outputs.s3_build_archive_path }}
+      S3_BUILD_ARTIFACT_PATH: ${{ needs.create-tag.outputs.s3_build_artifact_path }}      
+      ECR_REPO: ${{ needs.create-tag.outputs.ecr_repo }}
+      ECR_URL: ${{ needs.create-tag.outputs.ecr_url }}
+
+      DOCKER_FILE: ${{ needs.create-tag.outputs.docker_file }}
 
     steps:
     - name: Checkout repository For Docker Image Build
@@ -106,7 +144,7 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
 
     - name: Download JAR from S3
-      run: aws s3 cp s3://${{ env.S3_BUCKET }}/${{ env.TAG_NAME }}.jar $GITHUB_WORKSPACE/$DEPLOY_ARCHIVE_FILE
+      run: aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.CLASS }}/${{ env.PROJECT }}/${{ env.CODE_KIND}}/${{ env.S3_BUILD_ARCHIVE_PATH }}/${{ env.TAG_NAME }}.jar $GITHUB_WORKSPACE/$DEPLOY_ARCHIVE_FILE
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
@@ -122,5 +160,12 @@ jobs:
       run: |
         docker build -t ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }} -f $GITHUB_WORKSPACE/$DOCKER_FILE $GITHUB_WORKSPACE/
         docker push ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }}
-  
+
+    - name: Generate ${{ env.ECS_BUILD_ARTIFACT_FILE }}
+      run: |
+        echo '[{"name":"${{ env.TAG_NAME }}","imageUri":"${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }}"}]' > ${{ env.ECS_BUILD_ARTIFACT_FILE }}
+
+    - name: Upload ${{ env.ECS_BUILD_ARTIFACT_FILE }} to S3
+      run: |
+        aws s3 cp ${{ env.ECS_BUILD_ARTIFACT_FILE }} s3://${{ env.S3_BUCKET_NAME }}/${{ env.CLASS }}/${{ env.PROJECT }}/${{ env.CODE_KIND}}/${{ env.S3_BUILD_ARTIRACT_PATH }}/
 
