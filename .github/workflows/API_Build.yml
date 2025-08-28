@@ -202,7 +202,7 @@ jobs:
     - name: Update ECS Service
       run: |
         IMAGE_URI=${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }} # 배포된 Docker Image Version                                                    
-        TASK_DEFINITION=$(aws ecs describe-task-definition \                                           # 현재 Task 정의값 조회                   
+        TASK_DEFINITION=$(aws ecs describe-task-definition \
           --task-definition ${{ env.ECS_TASK_DEFINITION }} \
           --query 'taskDefinition' \
           --output json)                                                                               # Json 형태
