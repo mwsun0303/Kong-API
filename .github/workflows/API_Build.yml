@@ -138,7 +138,7 @@ jobs:
       DOCKER_FILE: ${{ needs.create-tag.outputs.docker_file }}
 
     steps:
-    - name: Checkout repository For Docker Image Build
+    - name: Checkout repository For Docker Image Push To ECR
       uses: actions/checkout@v4      
 
     - name: Set up AWS credentials For Docker Build
@@ -165,29 +165,48 @@ jobs:
       run: |
         docker build -t ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }} -f $GITHUB_WORKSPACE/$DOCKER_FILE $GITHUB_WORKSPACE/
         docker push ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }}
+# AWS Code PipeLine 사용 시
+    # - name: Generate ${{ env.ECS_BUILD_ARTIFACT_FILE }}
+    #   run: |
+    #     echo '[{"name":"${{ env.TAG_NAME }}","imageUri":"${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }}"}]' > ${{ env.ECS_BUILD_ARTIFACT_FILE }}
 
-    - name: Generate ${{ env.ECS_BUILD_ARTIFACT_FILE }}
-      run: |
-        echo '[{"name":"${{ env.TAG_NAME }}","imageUri":"${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }}"}]' > ${{ env.ECS_BUILD_ARTIFACT_FILE }}
+    # - name: Upload ${{ env.ECS_BUILD_ARTIFACT_FILE }} to S3
+    #   run: |
+    #     aws s3 cp ${{ env.ECS_BUILD_ARTIFACT_FILE }} s3://${{ env.S3_BUCKET_NAME }}/${{ env.CLASS }}/${{ env.PROJECT }}/${{ env.CODE_KIND}}/${{ env.S3_BUILD_ARTIFACT_PATH }}/
 
-    - name: Upload ${{ env.ECS_BUILD_ARTIFACT_FILE }} to S3
-      run: |
-        aws s3 cp ${{ env.ECS_BUILD_ARTIFACT_FILE }} s3://${{ env.S3_BUCKET_NAME }}/${{ env.CLASS }}/${{ env.PROJECT }}/${{ env.CODE_KIND}}/${{ env.S3_BUILD_ARTIFACT_PATH }}/
-
-    - name: Check AWS CLI version
-      run: aws --version
+  ECS Deploy:
+    runs-on: ubuntu-latest
+    needs:        
+      - create-tag  
+      - jar-build
+      - docker-image-build
+    env:
+      TAG_NAME: ${{ needs.create-tag.outputs.tag_name }}
+      AWS_ACCOUNT_ID: ${{ needs.create-tag.outputs.aws_account_id }}
+      AWS_REGION: ${{ needs.create-tag.outputs.aws_region }}
+      ECR_REPO: ${{ needs.create-tag.outputs.ecr_repo }}
+      ECR_URL: ${{ needs.create-tag.outputs.ecr_url }}
+      ECS_CLUSTER_NAME: ${{ needs.create-tag.outputs.ecs_cluster_name }}
+      ECS_SERVICE_NAME: ${{ needs.create-tag.outputs.ecs_service_name }}
+      ECS_TASK_DEFINITION: ${{ needs.create-tag.outputs.ecs_task_definition }}
+      IMAGE_URI: ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }} # 배포된 Docker Image Version
+      NEW_TASK_DEFINITION_FILE: new_task.json                                                         # Image 변경 후 적용시킬 Task 정의 파일
+    step:
+    - name: Set up AWS credentials For ECS Deploy
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
 
     - name: Update ECS Service
-      run: |
-        TASK_DEFINITION=$(aws ecs describe-task-definition \
+      run: |                                                    
+        TASK_DEFINITION=$(aws ecs describe-task-definition \                # 현재 Task 정의값 조회                   
           --task-definition ${{ env.ECS_TASK_DEFINITION }} \
           --query 'taskDefinition' \
-          --output json)
+          --output json)                                                    # Json 형태
 
-        IMAGE_URI="${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }}"
-        NEW_TASK_DEFINITION_FILE=new_task.json
-
-        STRIPPED_TASK_DEFINITION=$(echo "$TASK_DEFINITION" | jq '
+        STRIPPED_TASK_DEFINITION=$(echo "$TASK_DEFINITION" | jq '           # Image URI 적용을 위한 불필요 필드 제거
           del(
             .taskDefinitionArn,
             .revision,
@@ -199,15 +218,19 @@ jobs:
           )
         ')
 
-        NEW_TASK_DEFINITION=$(echo "$STRIPPED_TASK_DEFINITION" | jq --arg image_uri "$IMAGE_URI" '.containerDefinitions[0].image = $image_uri')
+        NEW_TASK_DEFINITION=$(echo "$STRIPPED_TASK_DEFINITION" | jq \        # New Image URI 반영, 신규 Task 정의
+          --arg image_uri "${{ env.IMAGE_URI }}" \
+          '.containerDefinitions[0].image = $image_uri')
 
-        echo "$NEW_TASK_DEFINITION" > "$NEW_TASK_DEFINITION_FILE"
+        echo "$NEW_TASK_DEFINITION" > "${{ env.NEW_TASK_DEFINITION_FILE }}"  # 신규 Task Json 형태로 저장
 
-        REGISTERED_TASK_DEF=$(aws ecs register-task-definition --cli-input-json file://$NEW_TASK_DEFINITION_FILE)
+        REGISTERED_TASK_DEF=$(aws ecs register-task-definition \             # 신규 Task 등록
+          --cli-input-json file://${{ env.NEW_TASK_DEFINITION_FILE }})
 
-        NEW_TASK_DEFINITION_ARN=$(echo "$REGISTERED_TASK_DEF" | jq -r '.taskDefinition.taskDefinitionArn')
+        NEW_TASK_DEFINITION_ARN=$(echo "$REGISTERED_TASK_DEF" | jq -r \      # 신규 Task 정의 ARN 조회
+          '.taskDefinition.taskDefinitionArn')
 
-        aws ecs update-service \
+        aws ecs update-service \                                             # ECS Service Deploy
           --cluster ${{ env.ECS_CLUSTER_NAME }} \
           --service ${{ env.ECS_SERVICE_NAME }} \
           --task-definition "$NEW_TASK_DEFINITION_ARN"
