@@ -176,9 +176,19 @@ jobs:
 
     - name: Update ECS Service
       run: |
+        # 태스크 정의 가져오기
         TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }})
-        NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq '.taskDefinition | .containerDefinitions[0].image = "${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }}"')
+
+        # 환경 변수 설정
+        IMAGE_URI="${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }}"
+
+        # 이미지 URL 업데이트
+        NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg image_uri "$IMAGE_URI" '.taskDefinition | del(.taskDefinitionArn, .revision, .status, .registeredAt, .registeredBy) | .containerDefinitions[0].image = $image_uri')
+
+        # 새 태스크 정의 등록
         NEW_TASK_DEFINITION_REVISION=$(aws ecs register-task-definition --cli-input-json "$NEW_TASK_DEFINITION")
+
+        # 서비스 업데이트
         aws ecs update-service \
           --cluster ${{ env.ECS_CLUSTER_NAME }} \
           --service ${{ env.ECS_SERVICE_NAME }} \
