@@ -165,5 +165,5 @@ jobs:
 
     - name: Upload ${{ env.ECS_BUILD_ARTIFACT_FILE }} to S3
       run: |
-        aws s3 cp ${{ env.ECS_BUILD_ARTIFACT_FILE }} s3://${{ env.S3_BUCKET_NAME }}/${{ env.CLASS }}/${{ env.PROJECT }}/${{ env.CODE_KIND}}/${{ env.S3_BUILD_ARTIRACT_PATH }}/
+        aws s3 cp ${{ env.ECS_BUILD_ARTIFACT_FILE }} s3://${{ env.S3_BUCKET_NAME }}/${{ env.CLASS }}/${{ env.PROJECT }}/${{ env.CODE_KIND}}/${{ env.S3_BUILD_ARTIFACT_PATH }}/
 
