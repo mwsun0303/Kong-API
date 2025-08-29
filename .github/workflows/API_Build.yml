@@ -199,14 +199,20 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
-    - name: Update ECS Service
+    - name: Image URI Create
       run: |
-        IMAGE_URI=${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }} # 배포된 Docker Image Version                                                    
+        IMAGE_URI=${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }} # 배포된 Docker Image Version
+        echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+
+    - name: Task Definition Check
+      run: |
         TASK_DEFINITION=$(aws ecs describe-task-definition \
           --task-definition ${{ env.ECS_TASK_DEFINITION }} \
           --query 'taskDefinition' \
-          --output json)                                                                               # Json 형태
-
+          --output json)        
+                                                                                 # Json 형태
+    - name: Delete Definition Field
+      run: |
         STRIPPED_TASK_DEFINITION=$(echo "$TASK_DEFINITION" | jq '                                      # Image URI 적용을 위한 불필요 필드 제거 (자동 생성, 수정 불가) 
           del(
             .taskDefinitionArn,
@@ -218,19 +224,24 @@ jobs:
             .compatibilities
           )
         ')
-
+    - name: New Definition Append 
+      run: |
+        # 신규 Image URI 적용
         NEW_TASK_DEFINITION=$(echo "$STRIPPED_TASK_DEFINITION" | jq \
           --arg image_uri "${IMAGE_URI}" \
           '.containerDefinitions[0].image = $image_uri')
-
+        # 신규 Task Json 형태로 변경
         echo "$NEW_TASK_DEFINITION" > "${{ env.NEW_TASK_DEFINITION_FILE }}"                             # 신규 Task Json 형태로 저장
-
+        # Json 파일 전송으로 신규 Task 등록
         REGISTERED_TASK_DEF=$(aws ecs register-task-definition \
           --cli-input-json file://${{ env.NEW_TASK_DEFINITION_FILE }})
-
+        # 신규 Task arn 추출
         NEW_TASK_DEFINITION_ARN=$(echo "$REGISTERED_TASK_DEF" | jq -r \
           '.taskDefinition.taskDefinitionArn')
 
+    - name: ECS Deploy
+      run: | 
+        # ECS Service Deploy
         aws ecs update-service \
           --cluster ${{ env.ECS_CLUSTER_NAME }} \
           --service ${{ env.ECS_SERVICE_NAME }} \
