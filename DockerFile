@@ -1,8 +1,15 @@
+FROM maven:3.9.4-eclipse-temurin-17 as builder
+
+WORKDIR /build
+COPY . .
+
+RUN mvn clean package -DskipTests
+
 FROM openjdk:17-jdk-slim
 
-COPY ROOT.jar /app/ROOT.jar
-
-CMD ["java", "-jar", "/app/ROOT.jar"]
-# CMD ["java", "-Dspring.profiles.active=prod", "-jar", "/app/ROOT.jar"] # Profile이 있을 경우
+COPY --from=builder /build/target/ROOT.jar /app/ROOT.jar
 
 EXPOSE 8080
+
+CMD ["java", "-jar", "/app/ROOT.jar"]
+# CMD ["java", "-Dspring.profiles.active=prod", "-jar", "/app/ROOT.jar"]
