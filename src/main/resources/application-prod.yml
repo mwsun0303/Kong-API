@@ -1,24 +1,24 @@
 spring:
   datasource:
     kong-db-1:
-      url: jdbc:postgresql://127.0.0.1:15432/postgres
+      url: jdbc:postgresql://3.38.93.173:15432/postgres
       username: ENC(VcFJjwO3xqiufEIy+XVut4ds7h3QZT0P)
       password: ENC(VcFJjwO3xqiufEIy+XVut4ds7h3QZT0P)
       driverClassName: org.postgresql.Driver
     kong-db-2:
-      url: jdbc:postgresql://127.0.0.1:25432/postgres
+      url: jdbc:postgresql://3.38.93.173:25432/postgres
       username: ENC(VcFJjwO3xqiufEIy+XVut4ds7h3QZT0P)
       password: ENC(VcFJjwO3xqiufEIy+XVut4ds7h3QZT0P)
       driverClassName: org.postgresql.Driver
     kong-db-3:
-      url: jdbc:postgresql://127.0.0.1:35432/postgres
+      url: jdbc:postgresql://3.38.93.173:35432/postgres
       username: ENC(VcFJjwO3xqiufEIy+XVut4ds7h3QZT0P)
       password: ENC(VcFJjwO3xqiufEIy+XVut4ds7h3QZT0P)
       driverClassName: org.postgresql.Driver
 
   data:
     redis:
-      host: 127.0.0.1
+      host: 3.38.93.173
       port: 16379
       password: ENC(Eh0iMv6wfyFQ8mUrc2afCZ3FBJYUf8L7)
 

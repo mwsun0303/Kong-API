@@ -9,17 +9,11 @@ import com.sun.kong.config.SecurityConfig;
 
 import jakarta.servlet.http.HttpServletResponse;
 
-
 @RestController
 public class Kong_Controller {
-	private final SecurityConfig security_Config;
-    
-	Kong_Controller(SecurityConfig security_Config) {
+    private final SecurityConfig security_Config;
+
+    Kong_Controller(SecurityConfig security_Config) {
         this.security_Config = security_Config;
     }
-//// index
-//    @GetMapping("/")
-//    public void redirectToIndex(HttpServletResponse response) throws IOException {
-//        response.sendRedirect("/index.html");
-//    }
 }
