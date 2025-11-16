@@ -5,8 +5,9 @@ COPY . .
 
 RUN mvn clean package
 
-FROM openjdk:17-jdk-slim
+FROM openjdk:17-jdk-bullseye
 
+WORKDIR /app
 COPY --from=builder /build/target/*.jar /app/ROOT.jar
 
 EXPOSE 8080
