@@ -5,7 +5,7 @@ COPY . .
 
 RUN mvn clean package
 
-FROM openjdk:17-jdk-bullseye
+FROM openjdk:17-slim
 
 WORKDIR /app
 COPY --from=builder /build/target/*.jar /app/ROOT.jar
