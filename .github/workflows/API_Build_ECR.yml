@@ -17,7 +17,7 @@ jobs:
       DEPLOY_ARCHIVE_FILE: ROOT.jar
       AWS_ACCOUNT_ID: 797921195556
       AWS_REGION: ap-northeast-2
-      ECR_REPO: sun-ecr
+      ECR_REPO: sun-api
       ECR_URL: dkr.ecr.ap-northeast-2.amazonaws.com
       DOCKER_FILE: DockerFile
     steps:
