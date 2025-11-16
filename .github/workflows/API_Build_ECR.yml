@@ -1,0 +1,103 @@
+name: Jar File Build
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: write  # 'write' 권한 추가
+
+jobs:
+  create-tag:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT: Kong
+      CLASS: prod
+      CODE_KIND: API
+      DEPLOY_ARCHIVE_FILE: ROOT.jar
+      AWS_ACCOUNT_ID: 797921195556
+      AWS_REGION: ap-northeast-2
+      ECR_REPO: sun-ecr
+      ECR_URL: dkr.ecr.ap-northeast-2.amazonaws.com
+      DOCKER_FILE: DockerFile
+    steps:
+    - name: Checkout repository For Create Tag
+      uses: actions/checkout@v4
+
+    - name: Set up Git
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+
+    - name: Generate Tag, Env OutPut Config
+      id: generate_tag
+      run: |
+        USER_NAME="${{ github.actor }}"                                           # GitHub Push User (Action Trigger User)
+        DATE=$(date +'%Y%m%d_%H%M')
+        TAG_NAME="${PROJECT}-${CODE_KIND}-${USER_NAME}-${DATE}"
+        echo "Generated Tag: $TAG_NAME"                                           # Tag Check
+        echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV                                  # Git TAG Push 용도 환경 변수 설정
+        echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT                               # Build Image Tag 용도 Output 설정
+
+    - name: Authenticate with GIT_TOKEN
+      run: |
+        git remote set-url origin https://x-access-token:${{ secrets.GIT_TOKEN }}@github.com/${{ github.repository }}
+        
+    - name: Create and push tag
+      run: |
+        git tag ${{ env.TAG_NAME }}                   # Tag
+        git push origin ${{ env.TAG_NAME }}           # Push
+        
+    outputs:
+      tag_name: ${{ steps.generate_tag.outputs.tag_name }}  # Generate Tag Output
+      class: ${{ env.CLASS }}
+      project: ${{ env.PROJECT }}
+      code_kind: ${{ env.CODE_KIND }}
+      deploy_archive_file: ${{ env.DEPLOY_ARCHIVE_FILE }}
+      aws_account_id: ${{ env.AWS_ACCOUNT_ID }}
+      aws_region: ${{ env.AWS_REGION }}
+      ecr_repo: ${{ env.ECR_REPO }}
+      ecr_url: ${{ env.ECR_URL }}
+      docker_file: ${{ env.DOCKER_FILE }}
+
+  docker-image-build:
+    runs-on: ubuntu-latest
+    needs:                                                  # Tag 참조를 위해 needs 추가        
+      - create-tag  
+    env:
+      TAG_NAME: ${{ needs.create-tag.outputs.tag_name }}
+      CLASS: ${{ needs.create-tag.outputs.class }}
+      PROJECT: ${{ needs.create-tag.outputs.project }}
+      CODE_KIND: ${{ needs.create-tag.outputs.code_kind }}
+      DEPLOY_ARCHIVE_FILE: ${{ needs.create-tag.outputs.deploy_archive_file }}
+      AWS_ACCOUNT_ID: ${{ needs.create-tag.outputs.aws_account_id }}
+      AWS_REGION: ${{ needs.create-tag.outputs.aws_region }}    
+      ECR_REPO: ${{ needs.create-tag.outputs.ecr_repo }}
+      ECR_URL: ${{ needs.create-tag.outputs.ecr_url }}
+      DOCKER_FILE: ${{ needs.create-tag.outputs.docker_file }}
+
+    steps:
+    - name: Checkout repository For Docker Image Push To ECR
+      uses: actions/checkout@v4      
+
+    - name: Set up AWS credentials For Docker Build
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Check tag name
+      run: echo "Tag from create-tag / ${{ needs.create-tag.outputs.tag_name }}"
+
+    - name: ECR Login
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Docker Image Build and Push to ECR
+      run: |
+        docker build -t ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }} -f $GITHUB_WORKSPACE/$DOCKER_FILE $GITHUB_WORKSPACE/
+        docker push ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }}
