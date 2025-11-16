@@ -3,11 +3,11 @@ FROM maven:3.9.4-eclipse-temurin-17 as builder
 WORKDIR /build
 COPY . .
 
-RUN mvn clean package -DskipTests
+RUN mvn clean package
 
 FROM openjdk:17-jdk-slim
 
-COPY --from=builder /build/target/ROOT.jar /app/ROOT.jar
+COPY --from=builder /build/target/*.jar /app/ROOT.jar
 
 EXPOSE 8080
 
