@@ -146,3 +146,14 @@ jobs:
               "base": "main",
               "body": "Deploy PR: image.tag Value Update to '"${TAG_NAME}"'"
             }'
+            
+      - name: Auto Merge Pull Request
+        run: |
+          curl -X PUT \
+            -H "Authorization: token ${GIT_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "${HELM_CHART_API_URL}/pulls/${{ steps.create_pr.outputs.pr_number }}/merge" \
+            -d '{
+              "commit_title": "Auto-merge: update image tag to '"${TAG_NAME}"'",
+              "merge_method": "squash"
+            }'
