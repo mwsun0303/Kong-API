@@ -137,16 +137,20 @@ jobs:
       - name: Create Pull Request
         id: create_pr
         run: |
-          curl -X POST \
-            -H "Authorization: token ${{ secrets.GIT_TOKEN }}" \
+          response=$(curl -s -X POST \
+            -H "Authorization: token ${GIT_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
-            $HELM_CHART_API_URL \
+            "${HELM_CHART_API_URL}/pulls" \
             -d '{
               "title": "Update image tag to '"${TAG_NAME}"'",
               "head": "update-image-tag-'"${TAG_NAME}"'",
               "base": "main",
               "body": "Deploy PR: image.tag Value Update to '"${TAG_NAME}"'"
-            }'
+            }')
+      
+          echo "$response"
+          pr_number=$(echo "$response" | jq -r '.number')
+          echo "pr_number=${pr_number}" >> $GITHUB_OUTPUT
             
       - name: Auto Merge Pull Request
         run: |
