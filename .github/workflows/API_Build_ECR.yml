@@ -135,6 +135,7 @@ jobs:
           git push origin update-image-tag-${TAG_NAME}
 
       - name: Create Pull Request
+        id: create_pr
         run: |
           curl -X POST \
             -H "Authorization: token ${{ secrets.GIT_TOKEN }}" \
