@@ -137,6 +137,7 @@ jobs:
       - name: Create Pull Request
         id: create_pr
         run: |
+          echo "=== Creating PR ==="
           response=$(curl -s -X POST \
             -H "Authorization: token ${GIT_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
@@ -148,9 +149,13 @@ jobs:
               "body": "Deploy PR: image.tag Value Update to '"${TAG_NAME}"'"
             }')
       
+          echo "=== PR API Response ==="
           echo "$response"
+      
           pr_number=$(echo "$response" | jq -r '.number')
-          echo "pr_number=${pr_number}" >> $GITHUB_OUTPUT
+      
+          echo "PR number: $pr_number"
+          echo "pr_number=$pr_number" >> $GITHUB_OUTPUT
             
       - name: Auto Merge Pull Request
         run: |
