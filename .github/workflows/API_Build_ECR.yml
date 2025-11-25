@@ -109,7 +109,7 @@ jobs:
       - docker-image-build
       - create-tag
     env:
-      TAG_NAME: ${{ needs.docker-image-build.outputs.tag_name }}
+      TAG_NAME: ${{ needs.create-tag.outputs.tag_name }}
       HELM_CHART_URL: github.com/mwsun0303/Helm-Chart.git
       HELM_CHART_API_URL: https://api.github.com/repos/mwsun0303/Helm-Chart/pulls
 
