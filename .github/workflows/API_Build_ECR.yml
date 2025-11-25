@@ -107,6 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - docker-image-build
+      - create-tag
     env:
       TAG_NAME: ${{ needs.docker-image-build.outputs.tag_name }}
       HELM_CHART_URL: github.com/mwsun0303/Helm-Chart.git
