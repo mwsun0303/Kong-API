@@ -75,7 +75,8 @@ jobs:
       ECR_REPO: ${{ needs.create-tag.outputs.ecr_repo }}
       ECR_URL: ${{ needs.create-tag.outputs.ecr_url }}
       DOCKER_FILE: ${{ needs.create-tag.outputs.docker_file }}
-
+      HELM_CHART_URL: github.com/mwsun0303/Helm-Chart.git
+      HELM_CHART_API_URL: https://api.github.com/repos/mwsun0303/Helm-Chart/pulls
     steps:
     - name: Checkout repository For Docker Image Push To ECR
       uses: actions/checkout@v4      
@@ -101,3 +102,36 @@ jobs:
       run: |
         docker build -t ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }} -f $GITHUB_WORKSPACE/$DOCKER_FILE $GITHUB_WORKSPACE/
         docker push ${{ env.AWS_ACCOUNT_ID }}.${{ env.ECR_URL }}/${{ env.ECR_REPO }}:${{ env.TAG_NAME }}
+
+    - name: Helm-Chart Repo Update
+      run: |
+        git clone https://x-access-token:${{ secrets.GIT_TOKEN }}@${{ env.HELM_CHART_URL }}
+        working-directory: ${{ github.workspace }}
+
+    - name: Update values.yaml
+      run: |
+        cd Helm-Chart
+        git checkout -b update-image-tag-${{ env.TAG_NAME }}
+
+        # image.tag 값 업데이트
+        sed -i "s/^  tag: .*/  tag: \"${{ env.TAG_NAME }}\"/" values.yaml
+
+        git config user.email "github-actions@github.com"
+        git config user.name "github-actions"
+
+        git add .
+        git commit -m "Update image tag to ${{ env.TAG_NAME }}"
+        git push origin update-image-tag-${{ env.TAG_NAME }}
+
+    - name: Create Pull Request
+      run: |
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.GIT_TOKEN }}" \
+          -H "Accept: application/vnd.github+json" \
+          $HELM_CHART_API_URL \
+          -d '{
+          "title": "Update image tag to '"${{ env.TAG_NAME }}"'",
+           "head": "update-image-tag-'"${{ env.TAG_NAME }}"'",
+              "base": "main",
+              "body": "Deploy PR: image.tag Value Update. : '${{ env.TAG_NAME }}'"
+            }'
