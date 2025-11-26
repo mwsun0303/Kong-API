@@ -154,7 +154,7 @@ jobs:
       - name: Auto Merge Pull Request
         run: |
           curl -X PUT \
-            -H "Authorization: token ${GIT_TOKEN}" \
+            -H "Authorization: token ${{ secrets.GIT_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
             "${HELM_CHART_API_URL}/${{ steps.create_pr.outputs.pr_number }}/merge" \
             -d '{
